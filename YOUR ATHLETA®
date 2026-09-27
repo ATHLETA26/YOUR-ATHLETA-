@@ -1,0 +1,405 @@
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>YOUR ATHLETA®</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  color:#fff;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 50% -15%,#302957 0,#11121a 38%,#07080c 72%);
+}
+
+.app{
+  min-height:100vh;
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+}
+
+header{
+  height:68px;
+  padding:0 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  background:rgba(7,8,12,.55);
+  backdrop-filter:blur(22px);
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  font-weight:800;
+  letter-spacing:-.5px;
+}
+
+.logo{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#fff,#8b7cff);
+  box-shadow:0 0 30px rgba(139,124,255,.4);
+}
+
+.new{
+  color:#fff;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  padding:9px 13px;
+  font-weight:700;
+}
+
+main{
+  flex:1;
+  padding:20px 15px 150px;
+}
+
+.hero{
+  text-align:center;
+  padding:75px 10px 35px;
+}
+
+.hero h1{
+  margin:0;
+  font-size:clamp(38px,9vw,64px);
+  letter-spacing:-3px;
+}
+
+.hero p{
+  color:#999ba7;
+  margin-top:14px;
+}
+
+.chat{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.message{
+  display:flex;
+  gap:10px;
+  max-width:88%;
+}
+
+.message.user{
+  margin-left:auto;
+  flex-direction:row-reverse;
+}
+
+.avatar{
+  width:32px;
+  height:32px;
+  flex-shrink:0;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-size:12px;
+  font-weight:800;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.bubble{
+  padding:12px 15px;
+  border-radius:18px;
+  line-height:1.55;
+  white-space:pre-wrap;
+  background:rgba(255,255,255,.065);
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.user .bubble{
+  background:#25243a;
+}
+
+.composer-area{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:12px 15px 18px;
+  background:linear-gradient(transparent,#07080c 30%);
+}
+
+.composer{
+  max-width:870px;
+  margin:auto;
+  display:flex;
+  gap:8px;
+  padding:8px;
+  border-radius:21px;
+  background:rgba(20,20,28,.9);
+  border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(22px);
+}
+
+textarea{
+  flex:1;
+  min-width:0;
+  resize:none;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#fff;
+  font:inherit;
+  padding:11px;
+  max-height:140px;
+}
+
+.send{
+  width:45px;
+  height:45px;
+  border:0;
+  border-radius:14px;
+  background:#fff;
+  color:#08090d;
+  font-size:20px;
+  font-weight:900;
+}
+
+.hint{
+  text-align:center;
+  color:#646673;
+  font-size:11px;
+  margin-top:8px;
+}
+
+.hidden{
+  display:none;
+}
+
+@media(max-width:600px){
+  .message{max-width:95%}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <span>YOUR ATHLETA®</span>
+  </div>
+
+  <button class="new" onclick="newChat()">New chat</button>
+</header>
+
+<main>
+
+<section class="hero" id="hero">
+  <h1>Ask anything.</h1>
+  <p>Your AI. Your ATHLETA®.</p>
+</section>
+
+<section class="chat" id="chat"></section>
+
+</main>
+
+<div class="composer-area">
+
+<form class="composer" onsubmit="sendMessage(event)">
+
+<textarea
+id="input"
+rows="1"
+placeholder="Message YOUR ATHLETA®..."
+></textarea>
+
+<button class="send">↑</button>
+
+</form>
+
+<div class="hint">
+YOUR ATHLETA® can make mistakes. Check important information.
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let messages =
+JSON.parse(localStorage.getItem("athleta_chat") || "[]");
+
+const chat = document.getElementById("chat");
+const hero = document.getElementById("hero");
+const input = document.getElementById("input");
+
+function render(){
+
+  chat.innerHTML="";
+
+  hero.classList.toggle(
+    "hidden",
+    messages.length > 0
+  );
+
+  messages.forEach(message=>{
+
+    const row=document.createElement("div");
+
+    row.className=
+      "message " + message.role;
+
+    const avatar=document.createElement("div");
+
+    avatar.className="avatar";
+
+    avatar.textContent=
+      message.role==="user" ? "U" : "A";
+
+    const bubble=document.createElement("div");
+
+    bubble.className="bubble";
+
+    bubble.textContent=message.content;
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+
+    chat.appendChild(row);
+
+  });
+
+  window.scrollTo(
+    0,
+    document.body.scrollHeight
+  );
+}
+
+function save(){
+
+  localStorage.setItem(
+    "athleta_chat",
+    JSON.stringify(messages)
+  );
+
+  render();
+}
+
+async function sendMessage(event){
+
+  event.preventDefault();
+
+  const text=input.value.trim();
+
+  if(!text)return;
+
+  messages.push({
+    role:"user",
+    content:text
+  });
+
+  input.value="";
+  input.style.height="auto";
+
+  save();
+
+  messages.push({
+    role:"assistant",
+    content:"Thinking…"
+  });
+
+  render();
+
+  const index=messages.length-1;
+
+  try{
+
+    /*
+      IMPORTANT:
+      This frontend should call YOUR SERVER.
+
+      Example:
+
+      const response = await fetch("/api/chat", {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          messages:messages.slice(0,-1)
+        })
+      });
+
+      const data=await response.json();
+
+      messages[index].content=data.answer;
+    */
+
+    await new Promise(
+      resolve=>setTimeout(resolve,700)
+    );
+
+    messages[index].content =
+      "YOUR ATHLETA® is ready. Connect the secure backend to activate the AI.";
+
+  }catch(error){
+
+    messages[index].content =
+      "Connection error.";
+
+  }
+
+  save();
+}
+
+function newChat(){
+
+  messages=[];
+
+  localStorage.removeItem(
+    "athleta_chat"
+  );
+
+  render();
+
+  input.focus();
+}
+
+input.addEventListener(
+  "input",
+  ()=>{
+    input.style.height="auto";
+    input.style.height=
+      Math.min(input.scrollHeight,140)+"px";
+  }
+);
+
+input.addEventListener(
+  "keydown",
+  event=>{
+    if(
+      event.key==="Enter" &&
+      !event.shiftKey
+    ){
+      event.preventDefault();
+      sendMessage(event);
+    }
+  }
+);
+
+render();
+
+</script>
+
+</body>
+</html>
